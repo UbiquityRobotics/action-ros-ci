@@ -443,14 +443,6 @@ done`;
 		});
 		posixPathScriptPath = posixPathScriptPath.replace(/\\/g, "/");
 	}
-	const posixRosWorkspaceDir = isWindows
-		? rosWorkspaceDir.replace(/\\/g, "/")
-		: rosWorkspaceDir;
-	await execBashCommand(
-		`vcs diff -s --repos ${posixRosWorkspaceDir} | cut -d ' ' -f 1 | grep "${repo["repo"]}$"` +
-			(isWindows ? ` | ${posixPathScriptPath}` : "") +
-			` | xargs rm -rf`
-	);
 
 	// The repo file for the repository needs to be generated on-the-fly to
 	// incorporate the custom repository URL and branch name, when a PR is
@@ -464,17 +456,6 @@ done`;
 	const repoFilePath = path.join(rosWorkspaceDir, "package.repo");
 	// Add a random string prefix to avoid naming collisions when checking out the test repository
 	const randomStringPrefix = Math.random().toString(36).substring(2, 15);
-	const repoFileContent = `repositories:
-  ${randomStringPrefix}/${repo["repo"]}:
-    type: git
-    url: 'https://github.com/${repoFullName}.git'
-    version: '${commitRef}'`;
-	fs.writeFileSync(repoFilePath, repoFileContent);
-	await execBashCommand(
-		"vcs import --force --recursive src/ < package.repo",
-		undefined,
-		options
-	);
 
 	// Print HEAD commits of all repos
 	await execBashCommand("vcs log -l1 src/", undefined, options);
